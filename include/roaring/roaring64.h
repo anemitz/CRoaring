@@ -170,6 +170,9 @@ roaring64_bitmap_t *roaring64_bitmap_of_ptr(size_t n_args,
  *
  * After calling this function, the original bitmap will be empty, and the
  * returned bitmap will contain all the values from the original bitmap.
+ * The result enables copy-on-write if the source enables it OR any transferred
+ * container is shared. A 32-bit bitmap may contain shared containers even when
+ * its own copy-on-write flag is clear.
  */
 roaring64_bitmap_t *roaring64_bitmap_move_from_roaring32(roaring_bitmap_t *r);
 

@@ -554,6 +554,12 @@ static void move_from_roaring32_offset(roaring64_bitmap_t *dst,
         uint8_t typecode;
         container_t *container = ra_get_container_at_index(
             &src->high_low_container, (uint16_t)i, &typecode);
+        // A 32-bit mixed-mode operation can leave SHARED containers in a
+        // bitmap whose COW flag is clear. Preserve their transferred ownership
+        // by enabling COW before inserting them into the 64-bit bitmap.
+        if (typecode == SHARED_CONTAINER_TYPE) {
+            dst->flags |= ROARING_FLAG_COW;
+        }
 
         uint8_t high48[ART_KEY_BYTES];
         uint64_t high48_bits = key_base | ((uint64_t)key << 16);

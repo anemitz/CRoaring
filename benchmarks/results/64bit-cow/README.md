@@ -6,7 +6,7 @@ arm64, Apple Clang 21.0.0 (clang-2100.1.1.101). All library builds use
 the benchmark uses `-O3 -DNDEBUG -std=gnu++11`.
 
 Baseline is commit `7dd6eda7`. The same benchmark source is compiled against
-baseline with `ROARING64_COW_BENCH_BASELINE`; off/on use this branch. The main
+baseline with `ROARING64_COW_BENCH_BASELINE`; off/on use commit `655516a4`. The main
 CSVs contain 31 timed iterations per case after one discarded warmup.
 Runs are sequential, with no concurrent builds/tests. CPU affinity/frequency
 are not pinned; min/max columns expose scheduling noise. Treat these as local
@@ -81,7 +81,8 @@ iteration and run-broad64 copy workloads). These measurements do not establish
 a broad "no material COW-off regression" result. Disabled COW is not free;
 repeatable overhead and scheduling noise both need consideration. Array payload
 caching was added after early runs showed per-value shared-wrapper checks slowing scalar iteration. The published
-CSVs all use the final implementation.
+CSVs record that implementation; the later transfer correction below has not
+been rebenchmarked.
 
 ## Correctness checks
 
@@ -109,3 +110,13 @@ This documents the lifetime requirement; it does not make using an invalidated
 iterator safe. The benchmarked runtime code is unchanged by this follow-up.
 After this update and worktree relocation, all 28 test executables passed
 again under ASan and UBSan, including the now 12 COW test groups.
+
+A further review found that mixed 32-bit operations can produce SHARED
+containers with the COW flag clear (the 32-bit validator rejects that mismatch).
+Transfer now enables 64-bit COW based on actual SHARED tags as well as the
+source flag. This fixes the reproduced double release on subsequent mutation.
+Regression coverage includes all three container types, one/two owners,
+add/remove/disable-COW, donor preservation, and both destruction orders.
+The timed workloads above do not exercise this 32-bit transfer path.
+After this correction, all 28 test executables passed under ASan and UBSan,
+including 13 COW test groups; the original transfer reproducer also passes.

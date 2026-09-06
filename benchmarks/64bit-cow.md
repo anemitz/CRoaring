@@ -22,7 +22,10 @@ checks this invariant.
   setter returns false on allocation failure and leaves COW enabled; values
   remain unchanged, although earlier containers may have been detached. The
   C++ wrapper reports this through its existing `ROARING_TERMINATE` convention.
-- Moving containers from a COW 32-bit bitmap transfers the setting as well.
+- Moving containers from a 32-bit bitmap enables COW if the source enables it
+  or any transferred container is shared. Mixed-mode 32-bit operations can
+  produce shared containers even when the source's flag is clear; the transfer
+  checks the actual container tags to preserve the stricter 64-bit invariant.
 
 Mutators detach the slot before calling consuming container operations. The
 four in-place set operations retain their existing allocate-result-and-release

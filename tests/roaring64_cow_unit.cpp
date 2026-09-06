@@ -242,6 +242,86 @@ DEFINE_TEST(unary_and_transfer) {
     roaring_bitmap_free(copy32);
 }
 
+DEFINE_TEST(mixed_roaring32_transfer) {
+    using Bitmap32 =
+        std::unique_ptr<roaring_bitmap_t, decltype(&roaring_bitmap_free)>;
+    for (uint8_t kind :
+         {ARRAY_CONTAINER_TYPE, BITSET_CONTAINER_TYPE, RUN_CONTAINER_TYPE}) {
+        for (bool donor_first : {false, true}) {
+            for (unsigned mutation = 0; mutation < 3; ++mutation) {
+                Bitmap32 source(roaring_bitmap_create(), roaring_bitmap_free);
+                Bitmap32 donor(roaring_bitmap_create(), roaring_bitmap_free);
+                assert_non_null(source.get());
+                assert_non_null(donor.get());
+                roaring_bitmap_add(source.get(), 0);  // Avoid empty overwrite.
+                const uint32_t base = 65536;
+                uint32_t limit = kind == ARRAY_CONTAINER_TYPE ? 100 : 10000;
+                uint32_t step = kind == RUN_CONTAINER_TYPE ? 1 : 2;
+                std::vector<uint32_t> donor_values;
+                for (uint32_t value = 0; value < limit; value += step) {
+                    roaring_bitmap_add(donor.get(), base + value);
+                    donor_values.push_back(base + value);
+                }
+                if (kind == RUN_CONTAINER_TYPE)
+                    assert_true(roaring_bitmap_run_optimize(donor.get()));
+                assert_int_equal(donor->high_low_container.typecodes[0], kind);
+                roaring_bitmap_set_copy_on_write(donor.get(), true);
+                roaring_bitmap_or_inplace(source.get(), donor.get());
+                assert_false(roaring_bitmap_get_copy_on_write(source.get()));
+                assert_int_equal(source->high_low_container.size, 2);
+                assert_int_equal(source->high_low_container.typecodes[1],
+                                 SHARED_CONTAINER_TYPE);
+                const char *reason = nullptr;
+                // The 32-bit validator rejects this flag mismatch, although
+                // the mixed-mode operation above can produce it. Transfer
+                // must normalize it into a valid 64-bit ownership state.
+                assert_false(
+                    roaring_bitmap_internal_validate(source.get(), &reason));
+
+                // Exercise transferred wrappers with one or two owners.
+                if (donor_first) donor.reset();
+                auto moved =
+                    own(roaring64_bitmap_move_from_roaring32(source.get()));
+                assert_true(roaring_bitmap_is_empty(source.get()));
+                source.reset();
+                assert_true(roaring64_bitmap_get_copy_on_write(moved.get()));
+                assert_int_equal(type_at(moved.get(), base),
+                                 SHARED_CONTAINER_TYPE);
+                std::set<uint64_t> expected(donor_values.begin(),
+                                            donor_values.end());
+                expected.insert(0);
+                assert_true(
+                    values(moved.get()) ==
+                    std::vector<uint64_t>(expected.begin(), expected.end()));
+
+                if (mutation == 2) cow(moved.get(), false);
+                if (mutation == 1) {
+                    roaring64_bitmap_remove(moved.get(), base);
+                    expected.erase(base);
+                } else {
+                    roaring64_bitmap_add(moved.get(), base + 20000);
+                    expected.insert(base + 20000);
+                }
+                assert_true(
+                    values(moved.get()) ==
+                    std::vector<uint64_t>(expected.begin(), expected.end()));
+                assert_int_equal(
+                    roaring64_bitmap_get_copy_on_write(moved.get()),
+                    mutation != 2);
+                moved.reset();
+                if (donor) {
+                    assert_true(
+                        roaring_bitmap_internal_validate(donor.get(), &reason));
+                    std::vector<uint32_t> actual(
+                        roaring_bitmap_get_cardinality(donor.get()));
+                    roaring_bitmap_to_uint32_array(donor.get(), actual.data());
+                    assert_true(actual == donor_values);
+                }
+            }
+        }
+    }
+}
+
 DEFINE_TEST(mixed_container_operations) {
     auto make = [](int type, int variant) {
         auto r = own(roaring64_bitmap_create());
@@ -799,6 +879,7 @@ int main() {
         cmocka_unit_test(iterator_interleavings),
         cmocka_unit_test(iterator_reinit_after_storage_changes),
         cmocka_unit_test(unary_and_transfer),
+        cmocka_unit_test(mixed_roaring32_transfer),
         cmocka_unit_test(iterators_and_serialization),
         cmocka_unit_test(frozen_lifetimes),
         cmocka_unit_test(randomized_copies),
