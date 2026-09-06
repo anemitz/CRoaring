@@ -69,7 +69,39 @@ roaring64_bitmap_t *roaring64_bitmap_create(void);
 void roaring64_bitmap_free(roaring64_bitmap_t *r);
 
 /**
- * Returns a copy of a bitmap.
+ * Copy-on-write is disabled by default. When enabled, copies can share
+ * reference-counted containers; mutation detaches the affected containers.
+ * The ART and container-pointer arrays are always independently owned, so a
+ * copy still takes time proportional to the number of containers.
+ *
+ * Copies, overwrites, flips, and offsets inherit the source's setting. Binary
+ * operations returning a new bitmap enable COW only when BOTH inputs enable
+ * it. In-place operations retain the destination's setting. Mixing COW and
+ * non-COW inputs is supported: containers are shared only when both source and
+ * destination enable COW. A non-COW bitmap never owns a shared container.
+ * Frozen sources always deep-copy their containers, even with COW enabled.
+ *
+ * First sharing changes the source's internal metadata, despite its logical
+ * contents remaining unchanged. Copy/share operations therefore require
+ * exclusive access to the source. Make copies before passing them to separate
+ * threads; atomic reference counts do not make concurrent access to the same
+ * bitmap safe. Mutation invalidates iterators and bulk contexts as usual.
+ */
+bool roaring64_bitmap_get_copy_on_write(const roaring64_bitmap_t *r);
+
+/**
+ * Set copy-on-write mode. Disabling detaches every shared container before
+ * clearing the flag. Returns false on allocation failure: the bitmap's values
+ * are unchanged and COW remains enabled, though some containers may already
+ * have been detached. Enabling never allocates and always succeeds.
+ * Changing this setting on a frozen view does not make the view mutable.
+ */
+bool roaring64_bitmap_set_copy_on_write(roaring64_bitmap_t *r, bool cow);
+
+/**
+ * Returns a copy of a bitmap, inheriting its copy-on-write setting.
+ * A copy of a frozen view owns its containers independently of the view's
+ * backing buffer.
  * The returned pointer may be NULL in case of errors.
  */
 roaring64_bitmap_t *roaring64_bitmap_copy(const roaring64_bitmap_t *r);

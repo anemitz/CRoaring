@@ -1,0 +1,377 @@
+{
+  "source": "cow-osm-monaco.osm",
+  "sha256": "149b5d7f0d09dfc1a0c02653af29f02845ac41380aa142cab2f129a2f33e751a",
+  "attribution": "\u00a9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright",
+  "sets": [
+    {
+      "file": "set-000.txt",
+      "group": "node/access=yes",
+      "count": 23,
+      "min": 1712696830,
+      "max": 14140358910,
+      "containers": 18
+    },
+    {
+      "file": "set-001.txt",
+      "group": "node/addr:city=Monaco",
+      "count": 63,
+      "min": 274500242,
+      "max": 14140358910,
+      "containers": 44
+    },
+    {
+      "file": "set-002.txt",
+      "group": "node/addr:country=MC",
+      "count": 120,
+      "min": 267901573,
+      "max": 13135678513,
+      "containers": 71
+    },
+    {
+      "file": "set-003.txt",
+      "group": "node/addr:postcode=98000",
+      "count": 71,
+      "min": 267901573,
+      "max": 14140358910,
+      "containers": 48
+    },
+    {
+      "file": "set-004.txt",
+      "group": "node/amenity=bench",
+      "count": 46,
+      "min": 4058432476,
+      "max": 11407933126,
+      "containers": 24
+    },
+    {
+      "file": "set-005.txt",
+      "group": "node/amenity=restaurant",
+      "count": 37,
+      "min": 267901573,
+      "max": 12324219719,
+      "containers": 32
+    },
+    {
+      "file": "set-006.txt",
+      "group": "node/amenity=waste_basket",
+      "count": 19,
+      "min": 4364381795,
+      "max": 13618531480,
+      "containers": 13
+    },
+    {
+      "file": "set-007.txt",
+      "group": "node/backrest=yes",
+      "count": 38,
+      "min": 4058432476,
+      "max": 11407933126,
+      "containers": 21
+    },
+    {
+      "file": "set-008.txt",
+      "group": "node/bench=yes",
+      "count": 19,
+      "min": 2185515251,
+      "max": 13312455877,
+      "containers": 11
+    },
+    {
+      "file": "set-009.txt",
+      "group": "node/bin=yes",
+      "count": 17,
+      "min": 2185515251,
+      "max": 13312455877,
+      "containers": 10
+    },
+    {
+      "file": "set-010.txt",
+      "group": "node/bus=yes",
+      "count": 64,
+      "min": 25192215,
+      "max": 13312455877,
+      "containers": 31
+    },
+    {
+      "file": "set-011.txt",
+      "group": "node/crossing:island=no",
+      "count": 40,
+      "min": 21914341,
+      "max": 12783327056,
+      "containers": 24
+    },
+    {
+      "file": "set-012.txt",
+      "group": "node/crossing:markings=yes",
+      "count": 60,
+      "min": 25191641,
+      "max": 11158310089,
+      "containers": 35
+    },
+    {
+      "file": "set-013.txt",
+      "group": "node/crossing:markings=zebra",
+      "count": 42,
+      "min": 25192010,
+      "max": 13925455815,
+      "containers": 28
+    },
+    {
+      "file": "set-014.txt",
+      "group": "node/crossing=marked",
+      "count": 46,
+      "min": 25191641,
+      "max": 9083879465,
+      "containers": 27
+    },
+    {
+      "file": "set-015.txt",
+      "group": "node/crossing=uncontrolled",
+      "count": 78,
+      "min": 21914341,
+      "max": 13925455815,
+      "containers": 39
+    },
+    {
+      "file": "set-016.txt",
+      "group": "node/crossing_ref=zebra",
+      "count": 73,
+      "min": 21914341,
+      "max": 8828262276,
+      "containers": 27
+    },
+    {
+      "file": "set-017.txt",
+      "group": "node/entrance=yes",
+      "count": 22,
+      "min": 2270588144,
+      "max": 14140358910,
+      "containers": 16
+    },
+    {
+      "file": "set-018.txt",
+      "group": "node/fee=yes",
+      "count": 17,
+      "min": 1079045434,
+      "max": 10672624925,
+      "containers": 13
+    },
+    {
+      "file": "set-019.txt",
+      "group": "node/highway=bus_stop",
+      "count": 30,
+      "min": 2185515251,
+      "max": 13312455877,
+      "containers": 14
+    },
+    {
+      "file": "set-020.txt",
+      "group": "node/highway=crossing",
+      "count": 152,
+      "min": 21914341,
+      "max": 13925455815,
+      "containers": 74
+    },
+    {
+      "file": "set-021.txt",
+      "group": "node/highway=elevator",
+      "count": 25,
+      "min": 1662811584,
+      "max": 12673404964,
+      "containers": 19
+    },
+    {
+      "file": "set-022.txt",
+      "group": "node/highway=give_way",
+      "count": 24,
+      "min": 1738360319,
+      "max": 13248293378,
+      "containers": 16
+    },
+    {
+      "file": "set-023.txt",
+      "group": "node/kerb=lowered",
+      "count": 23,
+      "min": 25202530,
+      "max": 14003838223,
+      "containers": 18
+    },
+    {
+      "file": "set-024.txt",
+      "group": "node/leaf_type=broadleaved",
+      "count": 36,
+      "min": 1096586345,
+      "max": 7862067060,
+      "containers": 6
+    },
+    {
+      "file": "set-025.txt",
+      "group": "node/leaf_type=needleleaved",
+      "count": 36,
+      "min": 1097220287,
+      "max": 8721086479,
+      "containers": 4
+    },
+    {
+      "file": "set-026.txt",
+      "group": "node/lit=yes",
+      "count": 24,
+      "min": 2185515251,
+      "max": 13312455877,
+      "containers": 14
+    },
+    {
+      "file": "set-027.txt",
+      "group": "node/natural=tree",
+      "count": 132,
+      "min": 1096586345,
+      "max": 9115253019,
+      "containers": 15
+    },
+    {
+      "file": "set-028.txt",
+      "group": "node/public_transport=platform",
+      "count": 31,
+      "min": 2185515251,
+      "max": 13312455877,
+      "containers": 14
+    },
+    {
+      "file": "set-029.txt",
+      "group": "node/public_transport=stop_position",
+      "count": 36,
+      "min": 25192215,
+      "max": 13312455875,
+      "containers": 26
+    },
+    {
+      "file": "set-030.txt",
+      "group": "node/shelter=yes",
+      "count": 19,
+      "min": 2185515251,
+      "max": 13299183775,
+      "containers": 10
+    },
+    {
+      "file": "set-031.txt",
+      "group": "node/source=survey 2019",
+      "count": 23,
+      "min": 6438487372,
+      "max": 6482462882,
+      "containers": 13
+    },
+    {
+      "file": "set-032.txt",
+      "group": "node/tactile_paving=no",
+      "count": 16,
+      "min": 25191668,
+      "max": 13312455877,
+      "containers": 12
+    },
+    {
+      "file": "set-033.txt",
+      "group": "node/wheelchair=yes",
+      "count": 57,
+      "min": 25202530,
+      "max": 14140358910,
+      "containers": 38
+    },
+    {
+      "file": "set-034.txt",
+      "group": "way-nodes/highway=footway",
+      "count": 1441,
+      "min": 21914341,
+      "max": 14003838223,
+      "containers": 209
+    },
+    {
+      "file": "set-035.txt",
+      "group": "way-nodes/highway=path",
+      "count": 38,
+      "min": 1784106843,
+      "max": 12133343386,
+      "containers": 7
+    },
+    {
+      "file": "set-036.txt",
+      "group": "way-nodes/highway=pedestrian",
+      "count": 362,
+      "min": 25181648,
+      "max": 14140358910,
+      "containers": 80
+    },
+    {
+      "file": "set-037.txt",
+      "group": "way-nodes/highway=primary",
+      "count": 213,
+      "min": 25177167,
+      "max": 13248293378,
+      "containers": 35
+    },
+    {
+      "file": "set-038.txt",
+      "group": "way-nodes/highway=raceway",
+      "count": 106,
+      "min": 25191634,
+      "max": 13312455860,
+      "containers": 27
+    },
+    {
+      "file": "set-039.txt",
+      "group": "way-nodes/highway=residential",
+      "count": 638,
+      "min": 21914340,
+      "max": 13923372671,
+      "containers": 141
+    },
+    {
+      "file": "set-040.txt",
+      "group": "way-nodes/highway=secondary",
+      "count": 480,
+      "min": 21914339,
+      "max": 13925455815,
+      "containers": 119
+    },
+    {
+      "file": "set-041.txt",
+      "group": "way-nodes/highway=secondary_link",
+      "count": 45,
+      "min": 25192216,
+      "max": 12851743507,
+      "containers": 18
+    },
+    {
+      "file": "set-042.txt",
+      "group": "way-nodes/highway=service",
+      "count": 268,
+      "min": 25182457,
+      "max": 13135657935,
+      "containers": 80
+    },
+    {
+      "file": "set-043.txt",
+      "group": "way-nodes/highway=steps",
+      "count": 298,
+      "min": 25193804,
+      "max": 13961943155,
+      "containers": 74
+    },
+    {
+      "file": "set-044.txt",
+      "group": "way-nodes/highway=tertiary",
+      "count": 141,
+      "min": 25183749,
+      "max": 13318583471,
+      "containers": 40
+    },
+    {
+      "file": "set-045.txt",
+      "group": "way-nodes/highway=unclassified",
+      "count": 23,
+      "min": 25211212,
+      "max": 1878844650,
+      "containers": 3
+    }
+  ],
+  "url": "https://api.openstreetmap.org/api/0.6/map?bbox=7.415,43.731,7.425,43.737",
+  "selection": "Node tag key=value groups and highway-way node-reference groups with at least 16 IDs; original node IDs retained."
+}

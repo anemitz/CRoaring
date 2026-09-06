@@ -859,6 +859,12 @@ int main() {
 
 # Compressed 64-bit Roaring bitmaps (C)
 
+The native 64-bit API supports optional container copy-on-write through
+`roaring64_bitmap_set_copy_on_write` and `roaring64_bitmap_get_copy_on_write`.
+`Roaring64` exposes the corresponding `setCopyOnWrite` and `getCopyOnWrite`
+methods. Mixed COW/non-COW inputs are supported; frozen sources always copy
+into owned containers. See the [ownership rules, tests, and benchmarks](benchmarks/64bit-cow.md).
+
 
 We also support efficient 64-bit compressed bitmaps in C:
 

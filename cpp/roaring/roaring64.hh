@@ -142,6 +142,17 @@ class Roaring64 {
     typedef api::roaring64_bitmap_t roaring64_bitmap_t;
 
    public:
+    /** Enable/disable container copy-on-write; see the C API for semantics. */
+    void setCopyOnWrite(bool cow) {
+        if (!api::roaring64_bitmap_set_copy_on_write(roaring, cow)) {
+            ROARING_TERMINATE("failed to disable roaring64 copy-on-write");
+        }
+    }
+
+    bool getCopyOnWrite() const noexcept {
+        return api::roaring64_bitmap_get_copy_on_write(roaring);
+    }
+
     /**
      * Create an empty bitmap.
      */
