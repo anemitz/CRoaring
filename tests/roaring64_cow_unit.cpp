@@ -698,6 +698,77 @@ DEFINE_TEST(allocation_failure) {
     assert_true(values(source.get()) == original);
 }
 
+DEFINE_TEST(iterator_reinit_after_storage_changes) {
+    using ChangeStorage = void (*)(roaring64_bitmap_t *);
+    const ChangeStorage changes[] = {
+        [](roaring64_bitmap_t *r) { roaring64_bitmap_shrink_to_fit(r); },
+        [](roaring64_bitmap_t *r) { roaring64_bitmap_run_optimize(r); },
+        [](roaring64_bitmap_t *r) {
+            roaring64_bitmap_remove_run_compression(r);
+        },
+        [](roaring64_bitmap_t *r) { cow(r, false); },
+    };
+    for (bool enabled : {false, true}) {
+        for (auto change : changes) {
+            auto source = fixture();
+            cow(source.get(), enabled);
+            auto sibling = own(roaring64_bitmap_copy(source.get()));
+            auto expected = values(source.get());
+            auto *it = roaring64_iterator_create(source.get());
+            auto *sibling_it = roaring64_iterator_create(sibling.get());
+            change(source.get());
+            assert_true(values(source.get()) == expected);
+
+            // Storage changes invalidate it even when every value is unchanged.
+            // Reinitialization must discard both ART and payload cache state.
+            roaring64_iterator_reinit(source.get(), it);
+            for (uint64_t value : expected) {
+                assert_true(roaring64_iterator_has_value(it));
+                assert_int_equal(roaring64_iterator_value(it), value);
+                roaring64_iterator_advance(it);
+                // Mutation of the other owner must leave this iterator valid.
+                assert_true(roaring64_iterator_has_value(sibling_it));
+                assert_int_equal(roaring64_iterator_value(sibling_it), value);
+                roaring64_iterator_advance(sibling_it);
+            }
+            assert_false(roaring64_iterator_has_value(it));
+            assert_false(roaring64_iterator_has_value(sibling_it));
+            roaring64_iterator_reinit_last(source.get(), it);
+            for (auto value = expected.rbegin(); value != expected.rend();
+                 ++value) {
+                assert_true(roaring64_iterator_has_value(it));
+                assert_int_equal(roaring64_iterator_value(it), *value);
+                roaring64_iterator_previous(it);
+            }
+            assert_false(roaring64_iterator_has_value(it));
+            roaring64_iterator_free(it);
+            roaring64_iterator_free(sibling_it);
+        }
+        // Keep the ART compact, then grow only the array payload. A subsequent
+        // shrink can free that payload while leaving the ART leaf unchanged.
+        auto array = own(roaring64_bitmap_create());
+        for (uint64_t i = 0; i < 40; ++i)
+            roaring64_bitmap_add(array.get(), i * 2);
+        roaring64_bitmap_shrink_to_fit(array.get());
+        for (uint64_t i = 40; i < 45; ++i)
+            roaring64_bitmap_add(array.get(), i * 2);
+        cow(array.get(), enabled);
+        auto sibling = own(roaring64_bitmap_copy(array.get()));
+        auto *it =
+            roaring64_iterator_create(array.get());  // Prime ARRAY cache.
+        roaring64_bitmap_shrink_to_fit(array.get());
+        roaring64_iterator_reinit(array.get(), it);
+        for (uint64_t i = 0; i < 45; ++i) {
+            assert_true(roaring64_iterator_has_value(it));
+            assert_int_equal(roaring64_iterator_value(it), i * 2);
+            roaring64_iterator_advance(it);
+        }
+        assert_false(roaring64_iterator_has_value(it));
+        same(array.get(), sibling.get());
+        roaring64_iterator_free(it);
+    }
+}
+
 DEFINE_TEST(cpp_forwarding) {
     roaring::Roaring64 a{1, 2, UINT64_C(1) << 50};
     assert_false(a.getCopyOnWrite());
@@ -726,6 +797,7 @@ int main() {
         cmocka_unit_test(mixed_container_operations),
         cmocka_unit_test(iterator_batches),
         cmocka_unit_test(iterator_interleavings),
+        cmocka_unit_test(iterator_reinit_after_storage_changes),
         cmocka_unit_test(unary_and_transfer),
         cmocka_unit_test(iterators_and_serialization),
         cmocka_unit_test(frozen_lifetimes),

@@ -23,6 +23,10 @@ namespace roaring {
 
 /**
  * Const bidirectional iterator over a Roaring64.
+ * Changes to the bitmap's values or internal storage invalidate iterators,
+ * including shrinkToFit(), runOptimize(), removeRunCompression(), and
+ * setCopyOnWrite(false). Obtain a new iterator before continuing iteration.
+ * Changes to a different bitmap sharing containers do not invalidate it.
  */
 class Roaring64ConstIterator {
    public:
@@ -142,7 +146,9 @@ class Roaring64 {
     typedef api::roaring64_bitmap_t roaring64_bitmap_t;
 
    public:
-    /** Enable/disable container copy-on-write; see the C API for semantics. */
+    /** Enable/disable container copy-on-write; see the C API for semantics.
+     * Disabling invalidates existing iterators, including on failure.
+     */
     void setCopyOnWrite(bool cow) {
         if (!api::roaring64_bitmap_set_copy_on_write(roaring, cow)) {
             ROARING_TERMINATE("failed to disable roaring64 copy-on-write");
@@ -428,6 +434,7 @@ class Roaring64 {
     /**
      * Remove run-length encoding even when it is more space efficient.
      * Return whether a change was applied.
+     * Invalidates existing iterators even though values are unchanged.
      */
     bool removeRunCompression() noexcept {
         return api::roaring64_bitmap_remove_run_compression(roaring);
@@ -438,6 +445,7 @@ class Roaring64 {
      * efficient; also convert from run containers when more space efficient.
      * Returns true if the result has at least one run container.
      * Additional savings might be possible by calling shrinkToFit().
+     * Invalidates existing iterators even though values are unchanged.
      */
     bool runOptimize() noexcept {
         return api::roaring64_bitmap_run_optimize(roaring);
@@ -446,6 +454,7 @@ class Roaring64 {
     /**
      * If needed, reallocate memory to shrink the memory usage.
      * Returns the number of bytes saved.
+     * Invalidates existing iterators even though values are unchanged.
      */
     size_t shrinkToFit() noexcept {
         return api::roaring64_bitmap_shrink_to_fit(roaring);

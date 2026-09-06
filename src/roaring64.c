@@ -73,10 +73,11 @@ typedef struct roaring64_iterator_s {
     // their payload and cardinality to avoid resolving a shared wrapper on
     // every value. Run containers stay on the ordinary path.
     //
-    // Every field is a pure function of the ART position and
-    // `container_it.index`, so the cache describes where the iterator is
-    // exactly when both still match what it was built from. Mutation (including
-    // COW detachment) invalidates the iterator and its cached payload pointers.
+    // The cache is valid only while the bitmap's storage remains unchanged.
+    // Leaf/index comparisons detect iterator repositioning, not container or
+    // payload replacement. Even content-preserving operations (shrink-to-fit,
+    // run conversion, COW detachment) invalidate the iterator. Reinitializing
+    // it rebuilds both its ART traversal state and cached payload pointers.
     // `fast_type` is BITSET_CONTAINER_TYPE, ARRAY_CONTAINER_TYPE, or 0 when
     // there is no usable cache.
     uint32_t fast_wordindex;  // Word index for bitsets, cardinality for arrays.
@@ -3502,9 +3503,10 @@ static inline bool roaring64_iterator_advance_slow(roaring64_iterator_t *it) {
 }
 
 bool roaring64_iterator_advance(roaring64_iterator_t *it) {
-    // Matching both the leaf and `container_it.index` is enough to know the
-    // cache describes where the iterator actually is: within a container the
-    // index determines the position. Anything that moved the cursor --
+    // Provided the bitmap's storage has not changed, matching both the leaf
+    // and `container_it.index` identifies the cached position. These checks
+    // do not detect bitmap changes; those require iterator reinitialization.
+    // Anything that moved the cursor --
     // `previous`, `move_equalorlarger`, any of the `read` variants -- moved one
     // of them, and drops through to the slow path, which rebuilds the cache.
     if (it->fast_type != 0 && it->fast_art_value == it->art_it.value &&

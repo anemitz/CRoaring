@@ -95,6 +95,8 @@ bool roaring64_bitmap_get_copy_on_write(const roaring64_bitmap_t *r);
  * are unchanged and COW remains enabled, though some containers may already
  * have been detached. Enabling never allocates and always succeeds.
  * Changing this setting on a frozen view does not make the view mutable.
+ * Disabling COW invalidates existing iterators and bulk contexts, including
+ * when detachment fails after partially changing the internal storage.
  */
 bool roaring64_bitmap_set_copy_on_write(roaring64_bitmap_t *r, bool cow);
 
@@ -387,17 +389,23 @@ uint64_t roaring64_bitmap_maximum(const roaring64_bitmap_t *r);
 /**
  * Remove run-length encoding even when it is more space efficient.
  * Return whether a change was applied.
+ * Invalidates existing iterators and bulk contexts, even though values are
+ * unchanged.
  */
 bool roaring64_bitmap_remove_run_compression(roaring64_bitmap_t *r);
 
 /**
  * Returns true if the result has at least one run container.
+ * Invalidates existing iterators and bulk contexts, even though values are
+ * unchanged.
  */
 bool roaring64_bitmap_run_optimize(roaring64_bitmap_t *r);
 
 /**
  * Shrinks internal arrays to eliminate any unused capacity. Returns the number
  * of bytes freed.
+ * Invalidates existing iterators and bulk contexts, even though values are
+ * unchanged. Reinitialize or recreate iterators before using them again.
  */
 size_t roaring64_bitmap_shrink_to_fit(roaring64_bitmap_t *r);
 
@@ -804,6 +812,16 @@ void roaring64_bitmap_to_uint64_array(const roaring64_bitmap_t *r,
  * Create an iterator object that can be used to iterate through the values.
  * Caller is responsible for calling `roaring64_iterator_free()`.
  *
+ * Changes to the bitmap's values OR internal storage invalidate its iterators.
+ * This includes `roaring64_bitmap_shrink_to_fit()`,
+ * `roaring64_bitmap_run_optimize()`,
+ * `roaring64_bitmap_remove_run_compression()`, and disabling copy-on-write,
+ * even though these operations preserve the set of values. After such an
+ * operation, reinitialize or recreate the iterator before using it again;
+ * seeking with an invalidated iterator is not sufficient. Freeing an
+ * invalidated iterator is allowed. Changes to another bitmap, including a
+ * copy sharing containers with this bitmap, do not invalidate this iterator.
+ *
  * The iterator is initialized. If there is a value, then this iterator points
  * to the first value and `roaring64_iterator_has_value()` returns true. The
  * value can be retrieved with `roaring64_iterator_value()`.
@@ -813,6 +831,7 @@ roaring64_iterator_t *roaring64_iterator_create(const roaring64_bitmap_t *r);
 /**
  * Create an iterator object that can be used to iterate through the values.
  * Caller is responsible for calling `roaring64_iterator_free()`.
+ * The invalidation rules of `roaring64_iterator_create()` also apply here.
  *
  * The iterator is initialized. If there is a value, then this iterator points
  * to the last value and `roaring64_iterator_has_value()` returns true. The
@@ -824,6 +843,7 @@ roaring64_iterator_t *roaring64_iterator_create_last(
 /**
  * Re-initializes an existing iterator. Functionally the same as
  * `roaring64_iterator_create` without a allocation.
+ * May be used after the bitmap has invalidated the iterator.
  */
 void roaring64_iterator_reinit(const roaring64_bitmap_t *r,
                                roaring64_iterator_t *it);
@@ -831,6 +851,7 @@ void roaring64_iterator_reinit(const roaring64_bitmap_t *r,
 /**
  * Re-initializes an existing iterator. Functionally the same as
  * `roaring64_iterator_create_last` without a allocation.
+ * May be used after the bitmap has invalidated the iterator.
  */
 void roaring64_iterator_reinit_last(const roaring64_bitmap_t *r,
                                     roaring64_iterator_t *it);

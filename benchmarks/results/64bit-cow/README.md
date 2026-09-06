@@ -97,3 +97,15 @@ The modified `roaring64.c` also compiles as C++11, and the C++64 wrapper tests
 pass. An optional whole-library C-as-C++ build is blocked by pre-existing
 namespace errors in `src/bitset.c`, reproduced on the baseline; it is not
 counted as a passing check.
+
+Follow-up review reproduced an ASan use-after-free when advancing an array
+iterator after `shrink_to_fit` reallocated its payload. The passing runs above
+did not cover that lifecycle. The public C/C++ contract now explicitly makes
+storage-changing operations iterator-invalidating, even when values are
+unchanged. Callers must reinitialize or recreate iterators afterward. Added
+coverage checks reinitialization after shrinking, run conversion, and disabling
+COW, as well as continued validity of an iterator on a separate sharing owner.
+This documents the lifetime requirement; it does not make using an invalidated
+iterator safe. The benchmarked runtime code is unchanged by this follow-up.
+After this update and worktree relocation, all 28 test executables passed
+again under ASan and UBSan, including the now 12 COW test groups.

@@ -36,6 +36,11 @@ First sharing changes the source's internal metadata. Make copies before
 handing them to separate threads; reference-count atomics do not permit
 concurrent access to the same bitmap during copy/share or mutation. Mutations
 invalidate iterators and bulk contexts, including cached bitset word pointers.
+This also applies to operations preserving values: `shrink_to_fit`,
+`run_optimize`, `remove_run_compression`, and disabling COW (even on failure).
+Reinitialize or recreate the iterator afterward; seeking does not repair an
+invalidated iterator. Mutating a different bitmap sharing the same containers
+does not invalidate this bitmap's iterators.
 Changing a frozen view's COW flag does not make its payload mutable.
 
 ## Verification
