@@ -692,8 +692,12 @@ bool run_container_validate(const run_container_t *run, const char **reason) {
     // Use uint32_t to avoid overflow issues on ranges that contain UINT16_MAX.
     uint32_t last_end = 0;
     for (int i = 0; i < run->n_runs; ++i) {
-        uint32_t start = run->runs[i].value;
-        uint32_t end = start + run->runs[i].length + 1;
+        // Portable frozen views may place runs at unaligned addresses.
+        rle16_t entry;
+        memcpy(&entry, (const char *)run->runs + i * sizeof(entry),
+               sizeof(entry));
+        uint32_t start = entry.value;
+        uint32_t end = start + entry.length + 1;
         if (end <= start) {
             *reason = "run start + length overflow";
             return false;

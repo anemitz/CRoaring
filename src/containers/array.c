@@ -479,13 +479,18 @@ bool array_container_validate(const array_container_t *v, const char **reason) {
         *reason = "NULL array pointer";
         return false;
     }
-    uint16_t prev = v->array[0];
+    // Portable frozen views may place values at unaligned addresses.
+    uint16_t prev;
+    memcpy(&prev, (const char *)v->array, sizeof(prev));
     for (int i = 1; i < v->cardinality; ++i) {
-        if (v->array[i] <= prev) {
+        uint16_t value;
+        memcpy(&value, (const char *)v->array + i * sizeof(value),
+               sizeof(value));
+        if (value <= prev) {
             *reason = "array elements not strictly increasing";
             return false;
         }
-        prev = v->array[i];
+        prev = value;
     }
 
     return true;

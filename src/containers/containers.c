@@ -388,6 +388,7 @@ roaring_container_iterator_t container_init_iterator_last(const container_t *c,
     }
 }
 
+CROARING_ALLOW_UNALIGNED
 bool container_iterator_lower_bound(const container_t *c, uint8_t typecode,
                                     roaring_container_iterator_t *it,
                                     uint16_t *value_out, uint16_t val) {
@@ -987,6 +988,7 @@ bool container_iterator_skip_backward(const container_t *c, uint8_t typecode,
     return has_value;
 }
 
+CROARING_ALLOW_UNALIGNED
 uint16_t container_iterator_find_run_end(const container_t *c, uint8_t typecode,
                                          roaring_container_iterator_t *it,
                                          uint16_t *value, bool *has_more) {
@@ -1070,6 +1072,7 @@ uint16_t container_iterator_find_run_end(const container_t *c, uint8_t typecode,
     }
 }
 
+CROARING_ALLOW_UNALIGNED
 uint16_t container_iterator_find_run_start(const container_t *c,
                                            uint8_t typecode,
                                            roaring_container_iterator_t *it,

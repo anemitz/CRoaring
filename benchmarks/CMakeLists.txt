@@ -24,3 +24,7 @@ if(ROARING_USE_CPM AND NOT WIN32)
   target_compile_definitions(roaring_benchmark PRIVATE
     BENCHMARK_DATA_DIR="${BENCHMARK_DATA_DIR}")
 endif()
+
+# Dedicated single-threaded allocation accounting; usable without CPM/counters.
+add_executable(roaring64_cow_benchmark roaring64_cow.cpp)
+target_link_libraries(roaring64_cow_benchmark PRIVATE roaring)

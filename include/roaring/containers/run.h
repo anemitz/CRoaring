@@ -562,13 +562,18 @@ void run_container_offset(const run_container_t *c, container_t **loc,
 /* Returns the smallest value (assumes not empty) */
 inline uint16_t run_container_minimum(const run_container_t *run) {
     if (run->n_runs == 0) return 0;
-    return run->runs[0].value;
+    rle16_t first;
+    memcpy(&first, (const char *)run->runs, sizeof(first));
+    return first.value;
 }
 
 /* Returns the largest value (assumes not empty) */
 inline uint16_t run_container_maximum(const run_container_t *run) {
     if (run->n_runs == 0) return 0;
-    return run->runs[run->n_runs - 1].value + run->runs[run->n_runs - 1].length;
+    rle16_t last;
+    memcpy(&last, (const char *)run->runs + (run->n_runs - 1) * sizeof(last),
+           sizeof(last));
+    return last.value + last.length;
 }
 
 /* Returns the number of values equal or smaller than x */

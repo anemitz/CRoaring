@@ -444,13 +444,19 @@ static inline bool array_container_contains_range(const array_container_t *arr,
 /* Returns the smallest value (assumes not empty) */
 inline uint16_t array_container_minimum(const array_container_t *arr) {
     if (arr->cardinality == 0) return 0;
-    return arr->array[0];
+    uint16_t value;
+    memcpy(&value, (const char *)arr->array, sizeof(value));
+    return value;
 }
 
 /* Returns the largest value (assumes not empty) */
 inline uint16_t array_container_maximum(const array_container_t *arr) {
     if (arr->cardinality == 0) return 0;
-    return arr->array[arr->cardinality - 1];
+    uint16_t value;
+    memcpy(&value,
+           (const char *)arr->array + (arr->cardinality - 1) * sizeof(value),
+           sizeof(value));
+    return value;
 }
 
 /* Returns the number of values equal or smaller than x */

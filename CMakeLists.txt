@@ -117,10 +117,13 @@ configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/tests/config.h.in"
 #################################
 
 add_subdirectory(src)
-if(ENABLE_ROARING_TESTS AND NOT EMSCRIPTEN)
+option(ENABLE_ROARING_COW_BENCHMARK "Build the standalone 64-bit COW benchmark" OFF)
+if((ENABLE_ROARING_TESTS OR ENABLE_ROARING_COW_BENCHMARK) AND NOT EMSCRIPTEN)
   if(CMAKE_SIZEOF_VOID_P EQUAL 8) # we only include the benchmarks on 64-bit systems.
     add_subdirectory(benchmarks)
   endif()
+endif()
+if(ENABLE_ROARING_TESTS AND NOT EMSCRIPTEN)
   add_subdirectory(tests)
 endif()
 find_program(BASH bash)

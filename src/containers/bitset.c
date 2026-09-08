@@ -1236,7 +1236,8 @@ bool bitset_container_select(const bitset_container_t *container, uint32_t *star
 /* Returns the smallest value (assumes not empty) */
 uint16_t bitset_container_minimum(const bitset_container_t *container) {
   for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
-    uint64_t w = container->words[i];
+    uint64_t w;
+    memcpy(&w, (const char *)container->words + i * sizeof(w), sizeof(w));
     if (w != 0) {
       int r = roaring_trailing_zeroes(w);
       return r + i * 64;
@@ -1248,7 +1249,8 @@ uint16_t bitset_container_minimum(const bitset_container_t *container) {
 /* Returns the largest value (assumes not empty) */
 uint16_t bitset_container_maximum(const bitset_container_t *container) {
   for (int32_t i = BITSET_CONTAINER_SIZE_IN_WORDS - 1; i > 0; --i ) {
-    uint64_t w = container->words[i];
+    uint64_t w;
+    memcpy(&w, (const char *)container->words + i * sizeof(w), sizeof(w));
     if (w != 0) {
       int r = roaring_leading_zeroes(w);
       return i * 64 + 63  - r;

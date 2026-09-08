@@ -69,7 +69,41 @@ roaring64_bitmap_t *roaring64_bitmap_create(void);
 void roaring64_bitmap_free(roaring64_bitmap_t *r);
 
 /**
- * Returns a copy of a bitmap.
+ * Copy-on-write is disabled by default. When enabled, copies can share
+ * reference-counted containers; mutation detaches the affected containers.
+ * The ART and container-pointer arrays are always independently owned, so a
+ * copy still takes time proportional to the number of containers.
+ *
+ * Copies, overwrites, flips, and offsets inherit the source's setting. Binary
+ * operations returning a new bitmap enable COW only when BOTH inputs enable
+ * it. In-place operations retain the destination's setting. Mixing COW and
+ * non-COW inputs is supported: containers are shared only when both source and
+ * destination enable COW. A non-COW bitmap never owns a shared container.
+ * Frozen sources always deep-copy their containers, even with COW enabled.
+ *
+ * First sharing changes the source's internal metadata, despite its logical
+ * contents remaining unchanged. Copy/share operations therefore require
+ * exclusive access to the source. Make copies before passing them to separate
+ * threads; atomic reference counts do not make concurrent access to the same
+ * bitmap safe. Mutation invalidates iterators and bulk contexts as usual.
+ */
+bool roaring64_bitmap_get_copy_on_write(const roaring64_bitmap_t *r);
+
+/**
+ * Set copy-on-write mode. Disabling detaches every shared container before
+ * clearing the flag. Returns false on allocation failure: the bitmap's values
+ * are unchanged and COW remains enabled, though some containers may already
+ * have been detached. Enabling never allocates and always succeeds.
+ * Changing this setting on a frozen view does not make the view mutable.
+ * Disabling COW invalidates existing iterators and bulk contexts, including
+ * when detachment fails after partially changing the internal storage.
+ */
+bool roaring64_bitmap_set_copy_on_write(roaring64_bitmap_t *r, bool cow);
+
+/**
+ * Returns a copy of a bitmap, inheriting its copy-on-write setting.
+ * A copy of a frozen view owns its containers independently of the view's
+ * backing buffer.
  * The returned pointer may be NULL in case of errors.
  */
 roaring64_bitmap_t *roaring64_bitmap_copy(const roaring64_bitmap_t *r);
@@ -136,6 +170,9 @@ roaring64_bitmap_t *roaring64_bitmap_of_ptr(size_t n_args,
  *
  * After calling this function, the original bitmap will be empty, and the
  * returned bitmap will contain all the values from the original bitmap.
+ * The result enables copy-on-write if the source enables it OR any transferred
+ * container is shared. A 32-bit bitmap may contain shared containers even when
+ * its own copy-on-write flag is clear.
  */
 roaring64_bitmap_t *roaring64_bitmap_move_from_roaring32(roaring_bitmap_t *r);
 
@@ -355,17 +392,23 @@ uint64_t roaring64_bitmap_maximum(const roaring64_bitmap_t *r);
 /**
  * Remove run-length encoding even when it is more space efficient.
  * Return whether a change was applied.
+ * Invalidates existing iterators and bulk contexts, even though values are
+ * unchanged.
  */
 bool roaring64_bitmap_remove_run_compression(roaring64_bitmap_t *r);
 
 /**
  * Returns true if the result has at least one run container.
+ * Invalidates existing iterators and bulk contexts, even though values are
+ * unchanged.
  */
 bool roaring64_bitmap_run_optimize(roaring64_bitmap_t *r);
 
 /**
  * Shrinks internal arrays to eliminate any unused capacity. Returns the number
  * of bytes freed.
+ * Invalidates existing iterators and bulk contexts, even though values are
+ * unchanged. Reinitialize or recreate iterators before using them again.
  */
 size_t roaring64_bitmap_shrink_to_fit(roaring64_bitmap_t *r);
 
@@ -772,6 +815,16 @@ void roaring64_bitmap_to_uint64_array(const roaring64_bitmap_t *r,
  * Create an iterator object that can be used to iterate through the values.
  * Caller is responsible for calling `roaring64_iterator_free()`.
  *
+ * Changes to the bitmap's values OR internal storage invalidate its iterators.
+ * This includes `roaring64_bitmap_shrink_to_fit()`,
+ * `roaring64_bitmap_run_optimize()`,
+ * `roaring64_bitmap_remove_run_compression()`, and disabling copy-on-write,
+ * even though these operations preserve the set of values. After such an
+ * operation, reinitialize or recreate the iterator before using it again;
+ * seeking with an invalidated iterator is not sufficient. Freeing an
+ * invalidated iterator is allowed. Changes to another bitmap, including a
+ * copy sharing containers with this bitmap, do not invalidate this iterator.
+ *
  * The iterator is initialized. If there is a value, then this iterator points
  * to the first value and `roaring64_iterator_has_value()` returns true. The
  * value can be retrieved with `roaring64_iterator_value()`.
@@ -781,6 +834,7 @@ roaring64_iterator_t *roaring64_iterator_create(const roaring64_bitmap_t *r);
 /**
  * Create an iterator object that can be used to iterate through the values.
  * Caller is responsible for calling `roaring64_iterator_free()`.
+ * The invalidation rules of `roaring64_iterator_create()` also apply here.
  *
  * The iterator is initialized. If there is a value, then this iterator points
  * to the last value and `roaring64_iterator_has_value()` returns true. The
@@ -792,6 +846,7 @@ roaring64_iterator_t *roaring64_iterator_create_last(
 /**
  * Re-initializes an existing iterator. Functionally the same as
  * `roaring64_iterator_create` without a allocation.
+ * May be used after the bitmap has invalidated the iterator.
  */
 void roaring64_iterator_reinit(const roaring64_bitmap_t *r,
                                roaring64_iterator_t *it);
@@ -799,6 +854,7 @@ void roaring64_iterator_reinit(const roaring64_bitmap_t *r,
 /**
  * Re-initializes an existing iterator. Functionally the same as
  * `roaring64_iterator_create_last` without a allocation.
+ * May be used after the bitmap has invalidated the iterator.
  */
 void roaring64_iterator_reinit_last(const roaring64_bitmap_t *r,
                                     roaring64_iterator_t *it);

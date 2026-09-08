@@ -1,0 +1,16 @@
+label,cow,case,median_ns,min_ns,max_ns,allocations,initial_live_bytes,peak_live_bytes,extra_peak_bytes,checksum
+baseline,off,dataset/copy-first,138459,133167,179792,4332,125596,144534,18938,5612
+baseline,off,dataset/copy-shared,142125,131042,174583,4332,287734,306672,18938,5612
+baseline,off,dataset/copies-live-8,1148958,1055625,1668541,34656,125596,1422700,1297104,44896
+baseline,off,dataset/copy-modify-0,140833,132916,183250,4332,125596,144534,18938,5612
+baseline,off,dataset/copy-modify-1,133750,129583,162083,4332,125596,144534,18938,5562
+baseline,off,dataset/copy-modify-10,142750,133417,177917,4333,125596,144534,18938,5426
+baseline,off,dataset/copy-modify-50,154917,150208,174459,4335,125596,144534,18938,4773
+baseline,off,dataset/copy-modify-100,187208,175084,202708,4336,125596,144534,18938,3954
+baseline,off,dataset/successive-union,279875,253333,333792,7155,125596,147794,22198,10943
+baseline,off,dataset/aggregate-union,864291,816209,1042583,25321,125596,220118,94522,3941
+baseline,off,dataset/intersection,45625,44292,69417,930,287734,289802,2068,235
+baseline,off,dataset/iterate-shared,34542,34000,41833,46,287734,287950,216,28149908472371
+baseline,off,dataset/contains-shared,11500,11208,22167,0,287734,287734,0,828
+baseline,off,dataset/mutate-unshared,7000,6375,19542,48,125596,126120,524,5612
+baseline,off,dataset/mutate-shared,7250,6792,10833,48,287734,288258,524,5612
