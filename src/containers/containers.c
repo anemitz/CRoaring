@@ -240,12 +240,17 @@ container_t *shared_container_extract_copy(shared_container_t *sc,
     assert(sc->typecode != SHARED_CONTAINER_TYPE);
     *typecode = sc->typecode;
     container_t *answer;
-    if (croaring_refcount_dec(&sc->counter)) {
+    if (croaring_refcount_get(&sc->counter) == 1) {
         answer = sc->container;
         sc->container = NULL;  // paranoid
         roaring_free(sc);
     } else {
         answer = container_clone(sc->container, *typecode);
+        if (croaring_refcount_dec(&sc->counter)) {
+            container_free(sc->container, sc->typecode);
+            sc->container = NULL;  // paranoid
+            roaring_free(sc);
+        }
     }
     assert(*typecode != SHARED_CONTAINER_TYPE);
     return answer;
